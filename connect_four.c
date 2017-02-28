@@ -7,16 +7,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "handle_arguments.h"
 #include "connect_four.h"
 
-int createboard(struct arguments* args, GameState* game);
 
 int main(int argc, char** argv){
 
 // Parse the command line arguments
 struct arguments* gameArgs = setup(argc, argv);
 
+// Build the winning strings
+char *p1Win = malloc( gameArgs->connectWin * sizeof(char));
+for(int x = 0; x < gameArgs->connectWin; x++){
+  p1Win[x] = 'X';
+}
+
+char *p2Win = malloc( gameArgs->connectWin * sizeof(char));
+for(int o = 0; o < gameArgs->connectWin; o++){
+  p2Win[o] = 'O';
+}
 
 GameState game; // The representation of the game state
 char * winner = "NW";
@@ -31,9 +41,9 @@ else if(gameArgs->width != gameArgs->square){
 else{
   createboard(gameArgs, &game);
 }
-
 // Keep playing until we find a winner
 int currentPlayer, column;
+int colcheck, rowcheck, diagcheck;
 while( strncmp(winner,"HW", 2) != 0 ){
 
   // Capture a column from the user
@@ -42,8 +52,8 @@ while( strncmp(winner,"HW", 2) != 0 ){
   scanf("%d", &column);
 
   // Check that the user input is correct for the given board
-  if( column > game->width || column < 0){
-    while(column > game->width || column < 0) {
+  if( column > game.width || column < 0){
+    while(column > game.width || column < 0) {
       printf("Please enter a valid column!\n");
       scanf("%d", &column);
     }
@@ -53,15 +63,35 @@ while( strncmp(winner,"HW", 2) != 0 ){
     printf("Please choose another column\n");
   }
 
-  //Include code for checking win conditions
-
-
-  // Switch turns between players
+  //Check the columns, rows, and diagonals;
   if(game.currentTurn == 1){
-    game.currentTurn = 2;
+    colcheck = checkwincol(&game, p1Win, column);
+  } else {
+    colcheck = checkwincol(&game, p2Win, column);
+  }
+
+  if(colcheck > 1){
+    printf("Player %d has won!\n", game.currentTurn);
+
+    // Ask if the user would like a new game
+    printf("Would you like to keep playing? y/n \n");
+    char newgame;
+    scanf("%c", &newgame);
+
+    if(newgame == 'y'){
+      printf("Starting a new game\n");
+    } else {
+      exit(0);
+    }
   }
   else{
-    game.currentTurn = 1;
+   // Switch turns between players and keep playing
+    if(game.currentTurn == 1){
+      game.currentTurn = 2;
+    }
+    else{
+      game.currentTurn = 1;
+    }
   }
 
 }
@@ -100,7 +130,7 @@ int createboard(struct arguments* args, GameState* game){
 
     int gameState = printboard(game);
     if(gameState < 0){
-      printf("Something went wrong with printing\n");
+      printf("Something went wrong with printing the initial board!\n");
     }
   }
 
@@ -135,48 +165,48 @@ int placepiece(GameState* game, int col){
       break;
     }
   }
-
   int gameState = printboard(game);
   if (gameState < 0){
     printf("Something went awry when printing the board\n" );
     return -1;
   }
-
   return 0;
 }
 
-/*************************************************
-* Prints the current state of the game to the user
-**************************************************/
-int printboard(GameState* game){
 
-  int k, size = game->width * game->height;
-  // Print the current state of the game to the user
-  char *str = malloc( size+1 * sizeof(char));
-  strcpy(str, game->board);
-  strncat(str, "\0", 1); //Append the EOF character at the end
-  for(int k = 0; k < size; k++){
-    if(k > 0 && k % game->width == 0){ // Separate the rows of the board
-      printf("\n");
-    }
-      printf("%c", str[k]);
-
-  }
-
-  //Clear the screen
-  printf("\n\n\n\n");
-  return 0;
-}
-
-/********************************************
-* Checks for win conditions on the board
-* Uses some index mathematics on the 1D array
-* Check for wins in colums, rows, and diagonals
+/*****************************************************
+* Checks for win conditions on the board.
+* Got idea on using substrings in C from stackoverflow
+* Check for wins in colums
 @param game the game state
-**********************************************/
-/*int checkwin(GameState* game){
+******************************************************/
+int checkwincol(GameState* game, char *winstr, int col){
 
-}*/
+  // Find how far the column is from the total width
+  int offset = col % game->width;
+  char *comparator = malloc(game->height * sizeof(char));
+
+  for( int c = 0; c < game->height; c++){
+    comparator[c] = game->board[offset]; //Start at the top of the column
+    offset += game->width;
+  }
+  char *match = strstr(comparator, winstr);
+
+  if( match != NULL){
+    free(comparator);
+    return 666; // The devil has been found
+  } else {
+    free(comparator);
+    return -666; // Not now devil, try your luck next time
+  }
+}
+
+/*******************************************************
+* Checks for win conditions on the diagonals of the game
+********************************************************/
+int checkwindiag(GameState* game, char *winstr, int col){
+  
+}
 
 /****************************************************
 * Save the game state based on its current state.
@@ -197,3 +227,26 @@ int printboard(GameState* game){
 /*char** loadgame(char * filename){
 
 }*/
+
+/*************************************************
+* Prints the current state of the game to the user
+**************************************************/
+int printboard(GameState* game){
+
+  int k, size = game->width * game->height;
+  // Print the current state of the game to the user
+  char *str = malloc( size+1 * sizeof(char));
+  strcpy(str, game->board);
+  strncat(str, "\0", 1); //Append the EOF character at the end
+  for(int k = 0; k < size; k++){
+    if(k > 0 && k % game->width == 0){ // Separate the rows of the board
+      printf("\n");
+    }
+      printf("%c", str[k]);
+
+  }
+
+  //Clear the screen
+  printf("\n\n\n");
+  return 0;
+}

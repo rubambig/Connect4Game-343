@@ -36,10 +36,16 @@ int placepiece(GameState* game, int col);
 ***************************************/
 int printboard(GameState* game);
 
-/***************************************
-* Checks for win conditions on the board
-****************************************/
-//int checkwin(struct GameState* game);
+/*****************************************************
+* Checks for win conditions on the columns of the game
+******************************************************/
+int checkwincol(GameState* game, char *winstr, int col);
+
+/*******************************************************
+* Checks for win conditions on the diagonals of the game
+********************************************************/
+int checkwindiag(GameState* game, char *winstr, int col);
+
 
 /***********************************************
 * Save the game state based on its current state
