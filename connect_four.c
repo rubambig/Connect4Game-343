@@ -11,6 +11,8 @@
 #include "handle_arguments.h"
 #include "connect_four.h"
 
+#define MATCH 0
+#define NOMATCH -1
 
 int main(int argc, char** argv){
 
@@ -42,13 +44,13 @@ else{
   createboard(gameArgs, &game);
 }
 // Keep playing until we find a winner
-int currentPlayer, column;
+int currentPlayer, column, size = game.width * game.height;
 int colcheck, rowcheck, diagcheck;
 while( strncmp(winner,"HW", 2) != 0 ){
 
   // Capture a column from the user
   currentPlayer = game.currentTurn;
-  printf("Place your next piece, player %d\n", currentPlayer);
+  printf("\nPlace your next piece, player %d\n", currentPlayer);
   scanf("%d", &column);
 
   // Check that the user input is correct for the given board
@@ -66,17 +68,19 @@ while( strncmp(winner,"HW", 2) != 0 ){
   //Check the columns, rows, and diagonals;
   if(game.currentTurn == 1){
     colcheck = checkwincol(&game, p1Win, column);
+    rowcheck = checkwinrow(&game, p1Win, place_result);
   } else {
     colcheck = checkwincol(&game, p2Win, column);
+    rowcheck = checkwinrow(&game, p2Win, place_result);
   }
 
-  if(colcheck > 1){
+  if(colcheck == MATCH || rowcheck == MATCH){
     printf("Player %d has won!\n", game.currentTurn);
 
     // Ask if the user would like a new game
-    printf("Would you like to keep playing? y/n \n");
-    char newgame;
-    scanf("%c", &newgame);
+    int newgame;
+    printf("Would you like to keep playing? y/n\n");
+    scanf("%d", &newgame);
 
     if(newgame == 'y'){
       printf("Starting a new game\n");
@@ -152,33 +156,36 @@ int findindex(GameState* game, int col, int row){
 * @param game the game state
 *******************************************************/
 int placepiece(GameState* game, int col){
-
+  int current_index;
   for( int i = game->height; i >=0; --i){
     int index = findindex(game, col, i );
     char current = game->board[index];
     if( current == '-' && game->currentTurn == 1 ){
       game->board[index] = 'X';
+      current_index = index;
       break;
     }
     if(current == '-' && game->currentTurn == 2 ){
       game->board[index] = 'O';
+      current_index = index;
       break;
     }
   }
   int gameState = printboard(game);
   if (gameState < 0){
     printf("Something went awry when printing the board\n" );
-    return -1;
+    return NOMATCH;
   }
-  return 0;
+  printf("Returned index is %d\n", current_index );
+  return current_index;
 }
 
-
 /*****************************************************
-* Checks for win conditions on the board.
+* Checks for win conditions on the board columns.
 * Got idea on using substrings in C from stackoverflow
-* Check for wins in colums
-@param game the game state
+* @param game the game state
+* @param winstr the winning string
+* @param col a colum number given by the user
 ******************************************************/
 int checkwincol(GameState* game, char *winstr, int col){
 
@@ -191,21 +198,134 @@ int checkwincol(GameState* game, char *winstr, int col){
     offset += game->width;
   }
   char *match = strstr(comparator, winstr);
-
   if( match != NULL){
     free(comparator);
-    return 666; // The devil has been found
+    return MATCH; // The devil has been found
   } else {
     free(comparator);
-    return -666; // Not now devil, try your luck next time
+    return NOMATCH; // Not now devil, try your luck next time
   }
 }
 
-/*******************************************************
-* Checks for win conditions on the diagonals of the game
-********************************************************/
-int checkwindiag(GameState* game, char *winstr, int col){
-  
+/********************************************************
+* Checks for win conditions on the diagonals of the board
+* Builds both tr-to-bl and tl-to-br diagonals
+* @param game the game state
+* @param winstr the winning string
+* @param col a colum number given by the user
+*********************************************************/
+/*int checkwindiag(GameState* game, char *winstr, int col){
+
+  // Building a diagonal string from top right to bottom left
+  char *diag_string_bottom;
+  char temp[10000];
+  //int start_pos, next_pos, prev = col - game->width -1;
+  int start_here = col - game->width - 1;
+  while(start_here >= 0){
+    start_here -= game->width - 1;
+  }
+  int count = 0;
+  while(start_here <= (game->width * game ->height)){
+    temp[count++] = game->board[start_here];
+  }
+
+
+  // Loop to find out the index of the last non-null element in temp
+  // use that index to malloc diag_string_bottom
+  // copy temp to diag_string_bottom
+  //diag_string_bottom = malloc( strlen(temp))
+  //for(int x)
+  // Find the index of the starting position of the diagonal
+  while( game->board[prev] == '_' || game->board[prev] == 'X' || game->board[prev] == 'O' ){
+    printf("In while statement %c\n", game->board[prev]);
+    prev -= game->width - 1;
+    printf("Previous is %d\n", prev);
+    if (!(game->board[prev] == '_' && game->board[prev] == 'X' && game->board[prev] == 'O')){
+      start_pos = prev + game->width + 1;
+      printf("Start pos %d\n", start_pos);
+      break;
+    }
+  }
+  printf("Start position is %d\n", start_pos );
+  // Start building string from the beginning of the diagonal
+  next_pos = start_pos;
+  char *temp = malloc(game->width * sizeof(char));
+  while(game->board[next_pos] == '_' || game->board[next_pos] == 'X' || game->board[next_pos] == 'O' ){
+    // Might not need this size = strlen(temp);
+
+    // Check that we ran out of bounds
+    char tempchar = game->board[next_pos];
+    printf("Temp char is %c", tempchar);
+    if( !(tempchar == '_' && tempchar == 'X' && tempchar == 'O')){
+      diag_string_bottom = malloc(strlen(temp) * sizeof(char));
+      strcpy(diag_string_bottom, temp);
+      break;
+    } else {
+      temp[strlen(temp)] = tempchar;
+      next_pos += game->width + 1;
+    }
+  }*/
+
+  /*printf("The built string is %s\n", diag_string_bottom );
+  printf("The winning string is %s\n", winstr);
+
+  // Compare the two strings
+  char *match = strstr(diag_string_bottom, winstr);
+
+  if( match != NULL){
+    free(diag_string_bottom);
+    free(match);
+    return MATCH;
+  } else {
+    free(diag_string_bottom);
+    free(match);
+    return NOMATCH;
+  }*/
+
+  // Attempt to build a diagonal string from top left to bottom right
+
+//}
+
+/********************************************************
+* Checks for win conditions on the rows of the board
+* Uses the offset of the col to build the row
+* @param game the game state
+* @param winstr the winning string
+* @param col a colum number given by the user
+*********************************************************/
+int checkwinrow(GameState* game, char *winstr, int col){
+
+  // Find the start of the current row
+  //int next_row_start = col + (col % game->width) + 1;
+  //printf("Next row starts at: %d\n", next_row_start);
+  //int row_start = next_row_start - game->width;
+  int row_start = col - (col % game->width);
+  printf("This row starts at: %d\n", row_start);
+
+  // Allocate space for the comparator string
+  char *comparator = malloc ( game->width * sizeof(char));
+  comparator[0] = game->board[row_start];
+  int count = 1;
+  row_start++;
+  while( (row_start % game->width) != 0){
+    comparator[count] = game->board[row_start];
+    row_start++;
+    count++;
+  }
+
+  printf("The built string is %s\n", comparator);
+  printf("The winning string is %s\n", winstr);
+
+  // Compare the two strings
+  char *match = strstr(comparator, winstr);
+
+  if( match != NULL){
+    free(comparator);
+    return MATCH;
+  } else {
+    free(comparator);
+    return NOMATCH;
+  }
 }
 
 /****************************************************

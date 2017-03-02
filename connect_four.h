@@ -46,6 +46,11 @@ int checkwincol(GameState* game, char *winstr, int col);
 ********************************************************/
 int checkwindiag(GameState* game, char *winstr, int col);
 
+/*********************************************************
+* Checks for win conditions in the row of the given column
+**********************************************************/
+int checkwinrow(GameState* game, char *winstr, int col);
+
 
 /***********************************************
 * Save the game state based on its current state
