@@ -44,7 +44,7 @@ int checkwincol(GameState* game, char *winstr, int col);
 /*******************************************************
 * Checks for win conditions on the diagonals of the game
 ********************************************************/
-int checkwindiag(GameState* game, char *winstr, int col);
+int checkwindiag(GameState* game, int col);
 
 /*********************************************************
 * Checks for win conditions in the row of the given column
@@ -55,9 +55,9 @@ int checkwinrow(GameState* game, char *winstr, int col);
 /***********************************************
 * Save the game state based on its current state
 ************************************************/
-//void savegame(struct GameState* game);
+//void savegame(GameState* game, char *filename);
 
 /***************************************
 * Load a game from a previous game state
 ****************************************/
-//char** loadgame(char * filename);*/
+//char** loadgame(GameState * game, char * filename);*/

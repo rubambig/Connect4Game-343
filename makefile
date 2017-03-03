@@ -4,7 +4,7 @@
 # @version 02/28/2017
 #********************************************************/#
 Connect: connect_four.c
-	clang connect_four.c handle_arguments.c  -o Connect
+	clang connect_four.c handle_arguments.c -o Connect
 
 # Creating different boards to test for rubustness
 # Board1 Creates a square board
@@ -14,7 +14,7 @@ test: Board1 Board2 Board3
 
 Board1:
 	./Connect -w 4 -h 4 -c 3
-	
+
 
 Board2:
 	./Connect -w 5 -h 8 -c 4
