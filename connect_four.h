@@ -1,3 +1,4 @@
+#include "handle_arguments.h"
 /*********************************************************
 Provides the skeleton for the game methods
 @author Gloire Rubambiza
@@ -44,7 +45,7 @@ int checkwincol(GameState* game, char *winstr, int col);
 /*******************************************************
 * Checks for win conditions on the diagonals of the game
 ********************************************************/
-int checkwindiag(GameState* game, int col);
+int checkwindiag(GameState* game, char *winstr, int col);
 
 /*********************************************************
 * Checks for win conditions in the row of the given column

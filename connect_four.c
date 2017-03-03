@@ -46,7 +46,7 @@ else{
 }
 // Keep playing until we find a winner
 int currentPlayer, column, size = game.width * game.height;
-int colcheck, rowcheck, diagcheck;
+int colcheck, rowcheck, diagcheck, place_result;
 while( strncmp(winner,"HW", 2) != 0 ){
 
   // Capture a column from the user
@@ -54,30 +54,33 @@ while( strncmp(winner,"HW", 2) != 0 ){
   printf("\nPlace your next piece, player %d\n", currentPlayer);
   scanf("%d", &column);
 
-  // Check that the user input is correct for the given board
+  /*// Check that the user input is correct for the given board
   if( column > game.width || column < 0){
     while(column > game.width || column < 0) {
-      printf("Please enter a valid column!\n");
       scanf("%d", &column);
     }
+  }*/
+  while((place_result = placepiece(&game, column - 1 )) < 0){
+    printf("Please enter a valid column, player %d\n", currentPlayer);
+    scanf("%d", &column);
   }
-  int place_result = placepiece(&game, column );
-  if(place_result < 0){
-    printf("Please choose another column\n");
-  }
+
 
   //Check the columns, rows, and diagonals;
   if(game.currentTurn == 1){
-    colcheck = checkwincol(&game, p1Win, column);
+    colcheck = checkwincol(&game, p1Win, column - 1);
+    printf("Winning string %s, current col status %d\n", p1Win, colcheck);
     rowcheck = checkwinrow(&game, p1Win, place_result);
-    diagcheck = checkwindiag(&game, place_result);
+    printf("Winning string %s, current row status %d\n", p1Win, rowcheck);
+    diagcheck = checkwindiag(&game, p1Win, place_result);
+    printf("Winning string %s, current diag status %d\n", p1Win, diagcheck);
   } else {
     colcheck = checkwincol(&game, p2Win, column);
     rowcheck = checkwinrow(&game, p2Win, place_result);
-    diagcheck = checkwindiag(&game, place_result);
+    diagcheck = checkwindiag(&game, p2Win, place_result);
   }
 
-  if(colcheck == MATCH || rowcheck == MATCH || diagcheck == MATCH){
+  if(diagcheck == MATCH || colcheck == MATCH || rowcheck == MATCH){
     printf("Player %d has won!\n", game.currentTurn);
 
     // Ask if the user would like a new game
@@ -146,10 +149,18 @@ int createboard(struct arguments* args, GameState* game){
 
 /*********************************************
 * Finds the appropriate row to place a piece in.
-* Check if the row has not been filled yet.
+* @param game the game state
+* @param col the column input from the user
+* @param row the current row we are checking
 **********************************************/
 int findindex(GameState* game, int col, int row){
+  if(row > game->height || row < 0)
+    return -1;
+  if(col >= game->width || col < 0 )
+    return -1;
+
   return (row * game->width) + col;
+
 }
 
 /*******************************************************
@@ -162,6 +173,9 @@ int placepiece(GameState* game, int col){
   int current_index;
   for( int i = game->height; i >=0; --i){
     int index = findindex(game, col, i );
+    if(index < 0){
+      return -1;
+    }
     char current = game->board[index];
     if( current == '-' && game->currentTurn == 1 ){
       game->board[index] = 'X';
@@ -173,11 +187,12 @@ int placepiece(GameState* game, int col){
       current_index = index;
       break;
     }
+    if((current == 'X' || current == 'O') && i == 0)
+      return -1;
   }
   int gameState = printboard(game);
   if (gameState < 0){
     printf("Something went awry when printing the board\n" );
-    return NOMATCH;
   }
   return current_index;
 }
@@ -200,6 +215,8 @@ int checkwincol(GameState* game, char *winstr, int col){
     offset += game->width;
   }
   char *match = strstr(comparator, winstr);
+  printf("Returned string is %s\n", comparator );
+
   if( match != NULL){
     free(comparator);
     return MATCH; // The devil has been found
@@ -212,84 +229,115 @@ int checkwincol(GameState* game, char *winstr, int col){
 /********************************************************
 * Checks for win conditions on the diagonals of the board
 * Builds both tr-to-bl and tl-to-br diagonals
+* If the diagonal is found early, we return
 * @param game the game state
 * @param winstr the winning string
 * @param col the index of a piece given by the user
 *********************************************************/
-int checkwindiag(GameState* game, int col_index){
-
+int checkwindiag(GameState* game, char *winstr, int col_index){
+  // Global variables to be reused by each loop
+  int row = col_index / game->width, col = col_index % game->width;
   int winning = game->connectWin;
   int longest = 1;
   char my_char = game->board[col_index];
-  int size = game->width * game->height;
-  printf("Seg Fault 1\n");
 
+  // Strings to hold left and right diagonal checks
+  // The most elements they can hold is limited by the number of rows
+  char * left_diag = malloc(game->height * sizeof(char));
+  char * right_diag = malloc(game->height * sizeof(char));
+  int count_left = 0, count_right = 0;
+
+
+  // Make copies of row and col to ensure each loop has a unique start
+  int curr_index_bl, curr_index_br, curr_index_tl, curr_index_tr;
+  int row_bl = row, row_br = row, row_tl = row, row_tr = row;
+  int col_bl = col, col_br = col, col_tl = col, col_tr = col;
 
   // Finding a match from index to bottom left
-  int current_index = col_index + game->width - 1;
-  printf("Col index is %d", col_index);
-  printf("Current index is %d \n", current_index);
-  while(current_index <= size ){
-    printf("Longest is %d\n", longest);
-    if(game->board[current_index] == my_char){
+  while ( row_bl > 0 && row_bl < game->height){
+    row_bl ++;
+    col_bl --;
+    curr_index_bl= findindex(game, col_bl, row_bl);
+    if(game->board[curr_index_bl] == my_char){
+      right_diag[count_right++] = game->board[curr_index_bl];
       longest++;
       if(longest == winning){
         return MATCH;
       }
+
+    } else {
+      break;
     }
-    current_index += game->width - 1;
-    
+  }
+
+  // Finding a match from index to top right
+  longest = 1;
+  while( row_tr >= 0 && row_tr < game->height){
+    row_tr--;
+    col_tr++;
+    curr_index_tr = findindex(game, col_tr, row_tr);
+    if(game->board[curr_index_tr] == my_char){
+      right_diag[count_right++] = game->board[curr_index_tr];
+      longest++;
+      if(longest == winning){
+        return MATCH;
+      }
+
+    } else {
+      break;
+    }
   }
 
   // Finding a match from index to bottom right
-  // Reset the index and the longest
-  current_index = col_index + game->width + 1;
-  printf("Current index is %d \n", current_index);
   longest = 1;
-  while(current_index <= size){
-    printf("Current Char is %c\n", game->board[current_index]);
-    if(game->board[current_index] == my_char){
+  while( row_br > 0 && row_br < game->height){
+    row_br++;
+    col_br++;
+    curr_index_br = findindex(game, col_br, row_br);
+    if(game->board[curr_index_br] == my_char){
+      left_diag[count_left++] = game->board[curr_index_br];
       longest++;
       if(longest == winning){
         return MATCH;
       }
+
+    } else {
+      break;
     }
-    current_index += game->width + 1;
-
   }
-
-
-  // Finding a match from index to top right
-  // Reset the index and the longest
-  current_index = col_index - game->width + 1;
-  printf("Current index is %d \n", current_index);
-  longest = 1;
-  while(current_index > 0){
-    if(game->board[current_index] == my_char){
-      longest++;
-      if(longest == winning){
-        return MATCH;
-      }
-    }
-    current_index -= game->width - 1;
-  }
-
 
   // Finding a match from index to top left
-  // Reset the index and the longest
-  current_index = col_index - game->width - 1;
-  printf("Current index is %d \n", current_index);
   longest = 1;
-  while(current_index > 0){
-    if(game->board[current_index] == my_char){
+  printf("Checking top left\n");
+  while( row_tl >= 0 && row_tl < game->height){
+    row_tl--;
+    col_tl--;
+    curr_index_tl = findindex(game, col_tl, row_tl);
+    if(game->board[curr_index_tl] == my_char){
+      left_diag[count_left++] = game->board[curr_index_tl];
       longest++;
+      printf("Longest so far is %d\n", longest );
       if(longest == winning){
         return MATCH;
       }
+
+    } else {
+      break;
     }
-    current_index -= game->width - 1;
   }
 
+  // Compare that none of the aggregate strings contain the winning string
+  char *match_left = strstr(right_diag, winstr);
+  char *match_right = strstr(left_diag, winstr);
+  if( match_right != NULL || match_left != NULL){
+    free(left_diag);
+    free(right_diag);
+    return MATCH;
+  } else {
+    free(right_diag);
+    free(left_diag);
+    return NOMATCH;
+  }
 
   return NOMATCH;
 
