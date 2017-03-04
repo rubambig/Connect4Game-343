@@ -56,11 +56,10 @@ int checkwindiag(GameState* game, char *winstr, int col);
 **********************************************************/
 int checkwinrow(GameState* game, char *winstr, int col);
 
-
 /***********************************************
-* Save the game state based on its current state
+* Build a string to be saved as the game state
 ************************************************/
-//void savegame(GameState* game, char *filename);
+char ** buildstring(GameState* game);
 
 /***************************************
 * Load a game from a previous game state

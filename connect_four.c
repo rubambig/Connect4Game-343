@@ -9,7 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "handle_arguments.h"
-//#include "file_utils.h"
+#include "file_utils.h"
 #include "connect_four.h"
 
 #define MATCH 0
@@ -71,7 +71,12 @@ while( strncmp(winner,"HW", 2) != 0 ){
     rowcheck = checkwinrow(&game, p2Win, place_result);
     diagcheck = checkwindiag(&game, p2Win, place_result);
   }
-
+  char ** build = buildstring(&game);
+  printf("The strings we have here are\n");
+  for( int j = 0; j < 2; j++){
+    printf("String %d is %s\n", j, *(build+j));
+  }
+  int write = write_file(build, "testfile");
   if(diagcheck == MATCH || colcheck == MATCH || rowcheck == MATCH){
     printf("Player %d has won!\n", game.currentTurn);
 
@@ -171,6 +176,7 @@ GameState newgame(GameState* game){
 * @param row the current row we are checking
 **********************************************/
 int findindex(GameState* game, int col, int row){
+  // Check that boundaries are not crossed
   if(row > game->height || row < 0)
     return -1;
   if(col >= game->width || col < 0 )
@@ -397,19 +403,53 @@ int checkwinrow(GameState* game, char *winstr, int col){
   }
 }
 
-/****************************************************
-* Save the game state based on its current state.
-* The user passes a -s flag and a file name
-* Call the file_utils written prior to do the saving
+/***********************************************
+* Build a string to be saved as the game state
 * @param game the game state
-****************************************************/
-/*void savegame(GameState* game, char *filename ){
+************************************************/
+char ** buildstring(GameState* game){
 
-  // Open the file.
-  FILE *out;
-  out = open(filename, "w");
+ // capture the potential size of the string
+ char ** state;
+ state = malloc(2 * sizeof(char));
+ char *agg = malloc (((game->width*game->height) + game->height + 5) * sizeof(char));
 
-}*/
+// Build the string with game fields in it
+char *fields = malloc(5 * sizeof(char));
+sprintf(fields, "%d\n%d\n%d\n",game->height, game->width,
+          game->connectWin);
+*(state) = malloc( strlen(fields) * sizeof(char));
+strcpy(*(state),fields);
+
+// Build the game string accomodating for new line characters
+int size = game->height * game->width + game->height;
+char *gamestring = malloc(size * sizeof(char));
+int count = 0;
+for(int i = 0 ; i < size - game->height; i++){
+  gamestring[count] = game->board[i];
+  if((i % game->width == 0) && (i != 0)){ // Come back to this point formatting
+    printf("We are inside the if statement\n");
+    gamestring[count+1] = '\n';
+    count+= 2;
+  } else {
+    count++;
+  }
+}
+printf("The length of gamestring is  %lu\n", strlen(gamestring));
+printf("Built the second string %s\n", gamestring);
+*(state+1) = malloc( strlen(gamestring) * sizeof(char));
+strcpy(*(state+1),gamestring);
+printf("Assigned the second string %s\n", *(state+1) );
+for(int j = 0; j < 2; j++){
+  printf("We have: %s\n", state[j]);
+}
+
+sprintf(agg, "%s\n%s", fields, gamestring );
+//printf("Address is %s\n", state);
+return state;
+//return agg;
+}
+
 
 /*****************************************************
 * Load a game from a previous game state
