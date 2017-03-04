@@ -54,28 +54,20 @@ while( strncmp(winner,"HW", 2) != 0 ){
   printf("\nPlace your next piece, player %d\n", currentPlayer);
   scanf("%d", &column);
 
-  /*// Check that the user input is correct for the given board
-  if( column > game.width || column < 0){
-    while(column > game.width || column < 0) {
-      scanf("%d", &column);
-    }
-  }*/
+  // Check user input before placing the piece
   while((place_result = placepiece(&game, column - 1 )) < 0){
-    printf("Please enter a valid column, player %d\n", currentPlayer);
+    printf("Enter a valid/availaible column, player %d\n", currentPlayer);
     scanf("%d", &column);
   }
 
 
   //Check the columns, rows, and diagonals;
   if(game.currentTurn == 1){
-    colcheck = checkwincol(&game, p1Win, column - 1);
-    printf("Winning string %s, current col status %d\n", p1Win, colcheck);
+    colcheck = checkwincol(&game, p1Win, place_result);
     rowcheck = checkwinrow(&game, p1Win, place_result);
-    printf("Winning string %s, current row status %d\n", p1Win, rowcheck);
     diagcheck = checkwindiag(&game, p1Win, place_result);
-    printf("Winning string %s, current diag status %d\n", p1Win, diagcheck);
   } else {
-    colcheck = checkwincol(&game, p2Win, column);
+    colcheck = checkwincol(&game, p2Win, place_result);
     rowcheck = checkwinrow(&game, p2Win, place_result);
     diagcheck = checkwindiag(&game, p2Win, place_result);
   }
@@ -84,12 +76,16 @@ while( strncmp(winner,"HW", 2) != 0 ){
     printf("Player %d has won!\n", game.currentTurn);
 
     // Ask if the user would like a new game
-    int newgame;
-    printf("Would you like to keep playing? y/n\n");
-    scanf("%d", &newgame);
+    char *newgame_op;
+    printf("Would you like to keep playing? YES/NO\n");
+    scanf("%s", newgame_op);
 
-    if(newgame == 'y'){
-      printf("Starting a new game\n");
+    if(strcmp(newgame_op,"Yes") == 0 || strcmp(newgame_op,"YES") == 0){
+      printf("Starting a new game....\n");
+      game = newgame(&game);
+    } else if(strcmp(newgame_op,"No") == 0 || strcmp(newgame_op, "NO") == 0) {
+      printf("Thanks for playing Connect 4, Happy Coding!\n");
+      exit(0);
     } else {
       exit(0);
     }
@@ -145,6 +141,27 @@ int createboard(struct arguments* args, GameState* game){
   }
 
   return 0;
+}
+
+/*************************************
+* Recreates the same game for the user
+**************************************/
+GameState newgame(GameState* game){
+
+  // Change the contents of the board.
+  // Set player 2 to start so that the game
+  // starts normally in main
+  int size = game->width * game->height;
+  for(int i = 0; i < size; i++){
+      game->board[i] = '-';
+  }
+
+  int gameState = printboard(game);
+  if(gameState < 0){
+    printf("Something went wrong with printing the initial board!\n");
+  }
+
+  return *game;
 }
 
 /*********************************************

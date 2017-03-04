@@ -17,7 +17,11 @@ typedef struct ConnectGames {
   char * board;
 } GameState;
 
-/***************************************
+/*************************************
+* Recreates the same game for the user
+**************************************/
+GameState newgame(GameState* game);
+/*************************************
  * Instantiates the board for user view
  **************************************/
 int createboard(struct arguments* arg, GameState* game);
