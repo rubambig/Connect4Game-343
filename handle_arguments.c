@@ -61,8 +61,8 @@ struct arguments* setup(int argc, char** argv){
 	// Default of width, height, square, connect, and load
 	arguments.width = 7;
 	arguments.height = 7;
-  arguments.square = 7;
-  arguments.connectWin = 4;
+	arguments.square = 7;
+	arguments.connectWin = 4;
 	arguments.load = NULL;
 
 	// Call argp to parse command-line arguments
@@ -72,8 +72,8 @@ struct arguments* setup(int argc, char** argv){
 	// them out if they are there.
 	int width = arguments.width;
 	int height = arguments.height;
-  int square = arguments.square;
-  int connectWin = arguments.connectWin;
+	int square = arguments.square;
+	int connectWin = arguments.connectWin;
 	printf("Width: %d\nHeight: %d\nSquare: %d\nConnectWin: %d\n\n", width, height, square, connectWin);
 	if(arguments.load != NULL){
 		printf("Load file: %s\n\n", arguments.load);

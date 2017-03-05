@@ -17,7 +17,7 @@ Board1:
 
 
 Board2:
-	./Connect -w 5 -h 8 -c 4
+	./Connect -w 5 -h 10 -c 4
 
 Board3:
 	./Connect -w 9 -h 5 -c 4

@@ -16,7 +16,7 @@
 #define NOMATCH -1
 
 int main(int argc, char** argv){
-
+printf("Setting up arguments soon");
 // Parse the command line arguments
 struct arguments* gameArgs = setup(argc, argv);
 
@@ -35,8 +35,9 @@ GameState game; // The representation of the game state
 char * winner = "NW";
 
 // Check that the players do not want to load a previous game
-if (gameArgs->load != NULL){
-  //logic for loading game from a file
+/if (gameArgs->load != NULL){
+  //game = loadgame(&game, gameArgs->load);
+  ///int printer = printboard(&game);
 }
 else if(gameArgs->width != gameArgs->square){
   createboard(gameArgs, &game);
@@ -53,8 +54,10 @@ while( strncmp(winner,"HW", 2) != 0 ){
   currentPlayer = game.currentTurn;
   printf("\nPlace your next piece, player %d\n", currentPlayer);
   scanf("%d", &column);
-
+  
+  
   // Check user input before placing the piece
+  // Scan for a string, but check if it's a digit
   while((place_result = placepiece(&game, column - 1 )) < 0){
     printf("Enter a valid/availaible column, player %d\n", currentPlayer);
     scanf("%d", &column);
@@ -72,11 +75,10 @@ while( strncmp(winner,"HW", 2) != 0 ){
     diagcheck = checkwindiag(&game, p2Win, place_result);
   }
   char ** build = buildstring(&game);
-  printf("The strings we have here are\n");
-  for( int j = 0; j < 2; j++){
-    printf("String %d is %s\n", j, *(build+j));
-  }
   int write = write_file(build, "testfile");
+  //int read = loadgame(&game, "testfile");
+  
+  
   if(diagcheck == MATCH || colcheck == MATCH || rowcheck == MATCH){
     printf("Player %d has won!\n", game.currentTurn);
 
@@ -238,7 +240,6 @@ int checkwincol(GameState* game, char *winstr, int col){
     offset += game->width;
   }
   char *match = strstr(comparator, winstr);
-  printf("Returned string is %s\n", comparator );
 
   if( match != NULL){
     free(comparator);
@@ -331,7 +332,7 @@ int checkwindiag(GameState* game, char *winstr, int col_index){
 
   // Finding a match from index to top left
   longest = 1;
-  printf("Checking top left\n");
+  
   while( row_tl >= 0 && row_tl < game->height){
     row_tl--;
     col_tl--;
@@ -339,7 +340,6 @@ int checkwindiag(GameState* game, char *winstr, int col_index){
     if(game->board[curr_index_tl] == my_char){
       left_diag[count_left++] = game->board[curr_index_tl];
       longest++;
-      printf("Longest so far is %d\n", longest );
       if(longest == winning){
         return MATCH;
       }
@@ -350,6 +350,8 @@ int checkwindiag(GameState* game, char *winstr, int col_index){
   }
 
   // Compare that none of the aggregate strings contain the winning string
+  printf("The left diagonal built is %s\n", left_diag);
+  printf("The right diagonal built is %s\n", right_diag);
   char *match_left = strstr(right_diag, winstr);
   char *match_right = strstr(left_diag, winstr);
   if( match_right != NULL || match_left != NULL){
@@ -412,11 +414,11 @@ char ** buildstring(GameState* game){
  // capture the potential size of the string
  char ** state;
  state = malloc(2 * sizeof(char));
- char *agg = malloc (((game->width*game->height) + game->height + 5) * sizeof(char));
+ char *agg = malloc (((game->width*game->height) + game->height + 6) * sizeof(char));
 
 // Build the string with game fields in it
-char *fields = malloc(5 * sizeof(char));
-sprintf(fields, "%d\n%d\n%d\n",game->height, game->width,
+char *fields = malloc(6 * sizeof(char));
+sprintf(fields, "%d\n%d\n%d\n",game->width, game->height,
           game->connectWin);
 *(state) = malloc( strlen(fields) * sizeof(char));
 strcpy(*(state),fields);
@@ -425,41 +427,71 @@ strcpy(*(state),fields);
 int size = game->height * game->width + game->height;
 char *gamestring = malloc(size * sizeof(char));
 int count = 0;
+printf("The board looks like this before the awkwardness%s\n", game->board);
 for(int i = 0 ; i < size - game->height; i++){
   gamestring[count] = game->board[i];
-  if((i % game->width == 0) && (i != 0)){ // Come back to this point formatting
-    printf("We are inside the if statement\n");
+  if(((i+1) % game->width == 0) && (i != 0)){ // Come back to this point formatting
+    printf("We are inside the if statement at index %d\n", i);
     gamestring[count+1] = '\n';
     count+= 2;
+    printf("Count is now at %d\n", count);
   } else {
     count++;
   }
 }
 printf("The length of gamestring is  %lu\n", strlen(gamestring));
-printf("Built the second string %s\n", gamestring);
-*(state+1) = malloc( strlen(gamestring) * sizeof(char));
-strcpy(*(state+1),gamestring);
+printf("Built the second string\n%s", gamestring);
+*(state+1) = malloc( (strlen(gamestring) + 1) * sizeof(char));
+strncpy(*(state+1),gamestring,size);
 printf("Assigned the second string %s\n", *(state+1) );
 for(int j = 0; j < 2; j++){
-  printf("We have: %s\n", state[j]);
+  printf("We have:\n%s\n", state[j]);
 }
 
 sprintf(agg, "%s\n%s", fields, gamestring );
+printf("The aggregate string is %s\n", agg);
 //printf("Address is %s\n", state);
 return state;
 //return agg;
 }
 
+/**************************************
+* Loads a saved game from a local file
+* @param filename the local file
+* @param game the state to be updated
+*************************************/
+GameState loadgame(GameState* game, char * filename){
+  printf("Entered loadgame");
+  FILE *fin = fopen(filename, "r");
+  
+  printf("The old size of the board is %lu", strlen(game->board));
+  // Scan for the dimensions and change the board as needed
+  fscanf(fin, "%d\n%d\n%d", &game->width, &game->height, &game->connectWin);
+  printf("Changed the dimensions");
+  
+  
+  int size = (game->width * game->height + game->height);
+  printf("The size gathered is %d\n", size);
+  char * board = malloc( size * sizeof(char) );
+  for(int k = 0; k < game->height; k++){
+    fscanf(fin, "%s\n", board);
+  }
+  game->board = malloc((size - game->width) * sizeof(char));
+  printf("The new size of the board is %lu", strlen(game->board));
+  for(int i = 0; i< size; i++){
+    if(board[i] == '\n'){
+      printf("Found the next row at position %d", i);
+    } else {
+      game->board[i] = board[i];
+    }
+    
+  }
+  printf("The copied board is %s", board);
+  printf("The size of the board is %lu\n", strlen(board));
+  return *game;
+}
 
-/*****************************************************
-* Load a game from a previous game state
-* The user passes a -l flag and a file name
-* Call the file_utils written prior to load the struct
-* @param filename the file specified by the user
-******************************************************/
-/*char** loadgame(char * filename){
 
-}*/
 
 /*************************************************
 * Prints the current state of the game to the user

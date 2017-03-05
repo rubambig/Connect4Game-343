@@ -64,4 +64,4 @@ char ** buildstring(GameState* game);
 /***************************************
 * Load a game from a previous game state
 ****************************************/
-//char** loadgame(GameState * game, char * filename);*/
+GameState loadgame(GameState* game, char * filename);

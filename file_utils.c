@@ -14,18 +14,12 @@
 #define FAILURE -1;
 
 /*
-int read_file( char * filename, char **buffer){
+int read_file( char * filename, GameState* game){
 
-  // Find the size of file to know how much memory
-  // is needed for the allocation
-  struct stat st;
-  stat(filename, &st);
-  int size = st.st_size;
-  char ch;
-
+  
   // Allocate the memory space
   *buffer = malloc(size * sizeof(char));
-
+  // Allocate the buffer for the second string
   //Open a new file input
   FILE *fin;
   fin = fopen(filename, "r");
@@ -61,9 +55,9 @@ int write_file(char ** gamestring, char * filename ){
     return FAILURE;
   }
 
-  printf("Successfully opened the file\n");
+  
   for(int k = 0; k < 2; k++){
-    printf("String being read is %s\n", *(gamestring+k));
+    printf("String being read is\n %s", *(gamestring+k));
     fputs(*(gamestring+k), fout);
   }
 
