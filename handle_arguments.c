@@ -61,22 +61,41 @@ struct arguments* setup(int argc, char** argv){
 	// Default of width, height, square, connect, and load
 	arguments.width = 7;
 	arguments.height = 7;
-	arguments.square = 7;
+	arguments.square = -1;
 	arguments.connectWin = 4;
 	arguments.load = NULL;
 
 	// Call argp to parse command-line arguments
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	// Return values are in the arguments struct.  Pull
-	// them out if they are there.
+	// Return values are in the arguments struct.
+	// Pull them out for user input checking.
 	int width = arguments.width;
 	int height = arguments.height;
 	int square = arguments.square;
 	int connectWin = arguments.connectWin;
-	printf("Width: %d\nHeight: %d\nSquare: %d\nConnectWin: %d\n\n", width, height, square, connectWin);
-	if(arguments.load != NULL){
-		printf("Load file: %s\n\n", arguments.load);
+	if(width <=0 || height <= 0 || (square <= 0 && square != -1)){
+	  printf("None of the dimensions can be <= 0!\n");
+	  exit(0);
 	}
+	else if(connectWin > height || connectWin > width || connectWin > square){
+	  printf("Win condition[%d] > Width[%d]/Height[%d]/Square[%d]\n", connectWin, 
+		 width, height, square);
+	  exit(0);
+	}
+	else if(square != -1){
+	  printf("You have chosen a %d by %d square board\n", square, square);
+	  arguments.width = arguments.square;
+	  arguments.height = arguments.square;
+	}
+	else{
+	  printf("Arguments passed\n");
+	  printf("Width: %d\nHeight: %d\nConnectWin: %d\n\n", width, height, connectWin);
+	}
+	 
+	if(arguments.load != NULL){
+		printf("Load file: %s\n", arguments.load);
+	}
+	
 	return &arguments;
 }
