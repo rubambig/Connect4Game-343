@@ -10,7 +10,7 @@
 #include <ctype.h>
 #include "handle_arguments.h"
 #include "file_utils.h"
-#include "connect_four.h"
+//#include "connect_four.h"
 
 #define MATCH 0
 #define NOMATCH -1
@@ -20,7 +20,7 @@ int main(int argc, char** argv){
 // Parse the command line arguments
 struct arguments* gameArgs = setup(argc, argv);
 
-// Build the winning strings
+/*// Build the winning strings
 char *p1Win = malloc( gameArgs->connectWin * sizeof(char));
 for(int x = 0; x < gameArgs->connectWin; x++){
   p1Win[x] = 'X';
@@ -29,21 +29,20 @@ for(int x = 0; x < gameArgs->connectWin; x++){
 char *p2Win = malloc( gameArgs->connectWin * sizeof(char));
 for(int o = 0; o < gameArgs->connectWin; o++){
   p2Win[o] = 'O';
-}
+}*/
 
 
 GameState game; // The representation of the game state
+game.currentTurn = 1;
 char * winner = "NW";
 
 // Check that the players do not want to load a previous game
 if (gameArgs->load != NULL){
+  
   printf("We have entered load if statement\n");
   game = loadgame(&game, gameArgs->load);
   printf("Game is now set up with width %d", game.width);
   int printer = printboard(&game);
-}
-else if(gameArgs->width != gameArgs->square){
-  createboard(gameArgs, &game);
 }
 else{
   createboard(gameArgs, &game);
@@ -64,18 +63,14 @@ while( strncmp(winner,"HW", 2) != 0 ){
   scanf("%s %d", save_param, &column);
   
   // Check user input before placing the piece
-  // Scan for a string, but check if it's a digit
   while((place_result = placepiece(&game, column - 1 )) < 0){
     printf("Enter a valid/availaible column, player %d\n", currentPlayer);
     scanf("%s %d", save_param, &column);
   }
   
-  printf("Where the hell are we seg faulting?\n");
-  printf("Got string %s\n", save_param);
-  printf("Got digit %d\n", column);
   
-  // Check that the user is not attempting to save the game
-  if(strncmp(save_param, "save=",5) == 0){
+  // Check that the user is not attempting to save the game.
+  if(strncmp(save_param, "save=" , 5) == 0){
     // Copy the filename
     char * filename = malloc((strlen(save_param) - 5) * sizeof(char));
     int s_index = 0;
@@ -93,7 +88,7 @@ while( strncmp(winner,"HW", 2) != 0 ){
     else
       printf("Saving the game was unsuccessful");
   }
-  /*else if(strncmp(save_param, "load=",5) == 0){
+  else if(strncmp(save_param, "load=" , 5) == 0){
     
     // Copy the filename
     char * filename = malloc((strlen(save_param) - 5) * sizeof(char));
@@ -102,18 +97,23 @@ while( strncmp(winner,"HW", 2) != 0 ){
       filename[s_index] = save_param[c];
       s_index++;
     }
-    
-    // Build the multidimensional string to be saved
-    printf("Loading game from file %s\n", filename);
+    printf("Copied the filename %s at least\n", filename);
     
     game = loadgame(&game, filename);
-    printf("Game is now set up with width %d", game.width);
+    
     int printer = printboard(&game);
-  }*/
+  }
   
-  
-  
-  
+  // Make up winning strings based on current game state
+  char *p1Win = malloc( game.connectWin * sizeof(char));
+  for(int x = 0; x < game.connectWin; x++){
+    p1Win[x] = 'X';
+  }
+
+  char *p2Win = malloc( game.connectWin * sizeof(char));
+  for(int o = 0; o < game.connectWin; o++){
+    p2Win[o] = 'O';
+  }
   
 
   //Check the columns, rows, and diagonals;
@@ -126,9 +126,10 @@ while( strncmp(winner,"HW", 2) != 0 ){
     rowcheck = checkwinrow(&game, p2Win, place_result);
     diagcheck = checkwindiag(&game, p2Win, place_result);
   }
-  //char ** build = buildstring(&game);
-  //int write = write_file(build, "testfile");
-  //int read = loadgame(&game, "testfile");
+  
+  printf("Status of row is %d", rowcheck);
+  printf("Status of col is %d", colcheck);
+  printf("Status of diag is %d", diagcheck);
   
   
   if(diagcheck == MATCH || colcheck == MATCH || rowcheck == MATCH){
@@ -202,7 +203,7 @@ int createboard(struct arguments* args, GameState* game){
     game->width = args->width;
     game->height = args->height;
     game->connectWin = args->connectWin;
-    game->currentTurn = 1;
+    //game->currentTurn = 1;
 
     // Instantiate the board
     int size = game->width * game->height;
@@ -301,6 +302,8 @@ int placepiece(GameState* game, int col){
 * @param col a colum number given by the user
 ******************************************************/
 int checkwincol(GameState* game, char *winstr, int col){
+  
+  
 
   // Find how far the column is from the total width
   int offset = col % game->width;

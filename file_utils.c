@@ -21,36 +21,50 @@
 GameState loadgame(GameState* game, char * filename){
   printf("Entered loadgame\n");
   FILE *fin = fopen(filename, "r");
+  int prev_player = -1;
+  // Save the previous player to keep playing next
+  if(game->currentTurn == 0)
+    prev_player = 1;
+  else
+    prev_player = game->currentTurn;
   
-  printf("The old size of the board is %lu\n", strlen(game->board));
   
-  // Scan for the new dimensions
-  fscanf(fin, "%d\n%d\n%d", &game->width, &game->height, &game->connectWin);
-  printf("Changed the dimensions to %d %d\n", game->height, game->width);
-  printf("Include one more sentence just in case%d\n", game->width*game->height);
-  
-  // Re-allocate new space for the board based on new sizes read
-  int size = (game->width * game->height + game->height), position = 0;
-  printf("The size gathered is %d\n", size);
-  char * board = malloc( size * sizeof(char) );
-  game->board = malloc((size - game->width) * sizeof(char));
-  printf("The new size of the board is %lu\n", strlen(game->board));
-  for(int k = 0; k < game->height; k++){
-    fscanf(fin, "%s\n", board);
-    // Copy the scanned portion to the game board
-    for(int i = position; i < position + game->width; i++){
-	if(board[i] == '\n'){
-	printf("Found the next row at position %d\n", i);
-	} else {
-	  game->board[i] = board[i];
-	}
-	  
-    }
-    position += game->width + 1;
+  // Check that the file was opened correctly.
+  if(fin == NULL){
+    fprintf(stderr, "Error opening a file named: [%s]\n", filename);
+    exit(1);
   }
-  printf("The copied board is %s\n", board);
-  printf("The size of the board is %lu\n", strlen(board));
+  
+  
+  // Scan for the new dimensions.
+  fscanf(fin, "%d\n%d\n%d", &game->width, &game->height, &game->connectWin);
+  printf("The new gamewin condition is %d", game->connectWin);
+  // Allocate space for a buffer.
+  int temp_size = (game->width * game->height + game->height);
+  printf("The temporary size is %d\n", temp_size);
+  char *buffer = malloc( temp_size * sizeof(char) );
+  printf("Allocated memory for the buffer!\n");
+ 
+  // Read the entire game state.
+  int totalRead = fread(buffer, 1, temp_size, fin );
+  
+  // Re-allocate new space for the board based on new sizes read.
+  game->board = malloc(game->width * game->height *  sizeof(char));
+  int bd_index = 0;
+  for(int k = 0; k < temp_size; k++){
+    if(buffer[k] == '\n'){
+	printf("Found the next row at position %d\n", k);
+    } else {
+	game->board[bd_index] = buffer[k];
+	printf("Copied over %c\n", game->board[bd_index]);
+	bd_index++;
+    }
+  }
+  printf("Game board now contains %s\n\n\n", game->board);
   fclose(fin);
+  
+  // Re-instate the previous player.
+  game->currentTurn = prev_player;
   return *game;
 }
 

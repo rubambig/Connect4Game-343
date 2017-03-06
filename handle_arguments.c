@@ -78,8 +78,8 @@ struct arguments* setup(int argc, char** argv){
 	  printf("None of the dimensions can be <= 0!\n");
 	  exit(0);
 	}
-	else if(connectWin > height || connectWin > width || connectWin > square){
-	  printf("Win condition[%d] > Width[%d]/Height[%d]/Square[%d]\n", connectWin, 
+	else if(connectWin > height || connectWin > width || (connectWin > square && square != -1)){
+	  printf("Win condition[%d] > Width[%d]/Height[%d]/Square[%d]\n\n\n", connectWin, 
 		 width, height, square);
 	  exit(0);
 	}
@@ -89,12 +89,12 @@ struct arguments* setup(int argc, char** argv){
 	  arguments.height = arguments.square;
 	}
 	else{
-	  printf("Arguments passed\n");
-	  printf("Width: %d\nHeight: %d\nConnectWin: %d\n\n", width, height, connectWin);
+	  printf("Arguments passed\n\n");
+	  printf("Width: %d\nHeight: %d\nConnectWin: %d\n", width, height, connectWin);
 	}
 	 
 	if(arguments.load != NULL){
-		printf("Load file: %s\n", arguments.load);
+		printf("Load file: %s\n\n\n", arguments.load);
 	}
 	
 	return &arguments;
