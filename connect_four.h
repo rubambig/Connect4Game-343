@@ -1,3 +1,5 @@
+#ifndef H_CONNECT_FOUR
+#define H_CONNECT_FOUR
 #include "handle_arguments.h"
 /*********************************************************
 Provides the skeleton for the game methods
@@ -61,7 +63,4 @@ int checkwinrow(GameState* game, char *winstr, int col);
 ************************************************/
 char ** buildstring(GameState* game);
 
-/***************************************
-* Load a game from a previous game state
-****************************************/
-//int loadgame(GameState* game, char * filename);
+#endif

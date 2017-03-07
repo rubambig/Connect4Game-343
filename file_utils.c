@@ -19,7 +19,6 @@
 * @param game the state to be updated
 *************************************/
 GameState loadgame(GameState* game, char * filename){
-  printf("Entered loadgame\n");
   FILE *fin = fopen(filename, "r");
   int prev_player = -1;
   // Save the previous player to keep playing next
@@ -38,12 +37,11 @@ GameState loadgame(GameState* game, char * filename){
   
   // Scan for the new dimensions.
   fscanf(fin, "%d\n%d\n%d", &game->width, &game->height, &game->connectWin);
-  printf("The new gamewin condition is %d", game->connectWin);
+  
+  
   // Allocate space for a buffer.
   int temp_size = (game->width * game->height + game->height);
-  printf("The temporary size is %d\n", temp_size);
   char *buffer = malloc( temp_size * sizeof(char) );
-  printf("Allocated memory for the buffer!\n");
  
   // Read the entire game state.
   int totalRead = fread(buffer, 1, temp_size, fin );
@@ -53,22 +51,24 @@ GameState loadgame(GameState* game, char * filename){
   int bd_index = 0;
   for(int k = 0; k < temp_size; k++){
     if(buffer[k] == '\n'){
-	printf("Found the next row at position %d\n", k);
+	// Do nothing. We skip these characters for easier math later
     } else {
 	game->board[bd_index] = buffer[k];
-	printf("Copied over %c\n", game->board[bd_index]);
 	bd_index++;
     }
   }
-  printf("Game board now contains %s\n\n\n", game->board);
+  
+  // Close the local file.
   fclose(fin);
   
   // Re-instate the previous player.
   game->currentTurn = prev_player;
+  
   return *game;
 }
 
 int write_file(char ** gamestring, char * filename ){
+  
   //Open a new file output
   FILE *fout;
   fout = fopen(filename, "w");
@@ -79,13 +79,11 @@ int write_file(char ** gamestring, char * filename ){
     return FAILURE;
   }
 
-  
+  // Print each part of 2D array to file. 
   for(int k = 0; k < 2; k++){
-    printf("String being written is\n%s", *(gamestring+k));
     fputs(*(gamestring+k), fout);
   }
-
-  printf("Successfully wrote to the file\n");
+  
   // Close file output
   fclose(fout);
   return SUCCESS;

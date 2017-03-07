@@ -3,8 +3,8 @@
 # @author Gloire Rubambiza
 # @version 02/28/2017
 #******************************************/#
-Connect: connect_four.c
-	clang connect_four.c handle_arguments.c file_utils.c -o Connect
+Connect: main.c
+	clang main.c connect_four.c handle_arguments.c file_utils.c -o Connect
 
 
 # Creating different boards to test for rubustness
